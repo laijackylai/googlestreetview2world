@@ -1,4 +1,5 @@
 .env
 .png
 .jpg
-/img
+/raw_img
+/depth_maps
