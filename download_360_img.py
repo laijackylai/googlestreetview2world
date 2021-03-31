@@ -17,4 +17,4 @@ params = [{
 results = google_streetview.api.results(params)
 
 results.preview()
-results.download_links('img')
+results.download_links('raw_img')
