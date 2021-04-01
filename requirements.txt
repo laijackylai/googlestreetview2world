@@ -1,5 +1,5 @@
 matplotlib==3.4.0
-numpy==1.20.2
 google_streetview==1.2.9
+numpy==1.20.2
 opencv_python==4.5.1.48
 python-dotenv==0.16.0
