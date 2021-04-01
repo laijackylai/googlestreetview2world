@@ -8,8 +8,8 @@ API_KEY = os.environ.get('API_KEY')
 
 params = [{
     'size': '640x640',
-    'location': '22.2694989,114.1304372',
-    'heading': '90',
+    'location': '22.269785,114.1300342',
+    'heading': '0;90;180;270',
     'pitch': '0',
     'key': API_KEY
 }]

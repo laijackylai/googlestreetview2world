@@ -1,5 +1,12 @@
 .env
-.png
-.jpg
-./raw_img
-./depth_maps
+*.png
+# *.jpg
+*.json
+
+# /raw_img
+# /depth_map
+# /contour
+# /gaussian
+# /bilateral
+# /key_points
+# /rectified
