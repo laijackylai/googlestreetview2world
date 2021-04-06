@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Read both images and convert to grayscale
-# img1 = cv.imread('./raw_img/gsv_0.jpg', cv.IMREAD_GRAYSCALE)
-# img2 = cv.imread('./raw_img/gsv_2.jpg', cv.IMREAD_GRAYSCALE)
-img1 = cv.imread('./raw_img/streetview1.jpg', cv.IMREAD_GRAYSCALE)
-img2 = cv.imread('./raw_img/streetview2.jpg', cv.IMREAD_GRAYSCALE)
+img1 = cv.imread('./raw_img/gsv_0.jpg', cv.IMREAD_GRAYSCALE)
+img2 = cv.imread('./raw_img/gsv_2.jpg', cv.IMREAD_GRAYSCALE)
+# img1 = cv.imread('./raw_img/streetview1.jpg', cv.IMREAD_GRAYSCALE)
+# img2 = cv.imread('./raw_img/streetview2.jpg', cv.IMREAD_GRAYSCALE)
 
 
 # ------------------------------------------------------------
