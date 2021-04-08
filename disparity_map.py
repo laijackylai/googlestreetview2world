@@ -1,12 +1,17 @@
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 # Read both images and convert to grayscale
-img1 = cv.imread('./raw_img/gsv_0.jpg', cv.IMREAD_GRAYSCALE)
-img2 = cv.imread('./raw_img/gsv_2.jpg', cv.IMREAD_GRAYSCALE)
+img1 = cv.imread('./raw_img/gsv_3.jpg', cv.IMREAD_GRAYSCALE)
+img2 = cv.imread('./raw_img/gsv_4.jpg', cv.IMREAD_GRAYSCALE)
 # img1 = cv.imread('./raw_img/streetview1.jpg', cv.IMREAD_GRAYSCALE)
 # img2 = cv.imread('./raw_img/streetview2.jpg', cv.IMREAD_GRAYSCALE)
+# img1 = cv.imread('./raw_img/left_img.jpg', cv.IMREAD_GRAYSCALE)
+# img2 = cv.imread('./raw_img/right_img.jpg', cv.IMREAD_GRAYSCALE)
 
 
 # ------------------------------------------------------------
@@ -22,7 +27,14 @@ axes[0].axhline(450)
 axes[1].axhline(450)
 plt.suptitle("Original images")
 plt.savefig("original_images.png")
+logging.info('saved original images')
 # plt.show()
+
+# bilateral filtering
+# bilat1 = cv.bilateralFilter(img1, 9, 75, 75)
+# bilat2 = cv.bilateralFilter(img2, 9, 75, 75)
+# cv.imwrite('bilat_1.png', bilat1)
+# cv.imwrite('bilat_2.png', bilat2)
 
 # 1. Detect keypoints and their descriptors
 # Based on: https://docs.opencv.org/master/dc/dc3/tutorial_py_matcher.html
@@ -34,10 +46,12 @@ kp1, des1 = sift.detectAndCompute(img1, None)
 kp2, des2 = sift.detectAndCompute(img2, None)
 
 # Visualize keypoints
-imgSift = cv.drawKeypoints(
+imgSift1 = cv.drawKeypoints(
     img1, kp1, None, flags=cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-# cv.imshow("SIFT Keypoints", imgSift)
-cv.imwrite("sift_keypoints.png", imgSift)
+cv.imwrite("sift_keypoints_1.png", imgSift1)
+imgSift2 = cv.drawKeypoints(
+    img2, kp2, None, flags=cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+cv.imwrite("sift_keypoints_2.png", imgSift2)
 
 # Match keypoints in both images
 # Based on: https://docs.opencv.org/master/dc/dc3/tutorial_py_matcher.html
@@ -56,12 +70,12 @@ pts1 = []
 pts2 = []
 
 for i, (m, n) in enumerate(matches):
-    if m.distance < 0.6*n.distance:
+    if m.distance < 0.8 * n.distance: # * tune this number
         # Keep this keypoint pair
         matchesMask[i] = [1, 0]
         good.append(m)
-        pts2.append(kp2[m.trainIdx].pt)
         pts1.append(kp1[m.queryIdx].pt)
+        pts2.append(kp2[m.trainIdx].pt)
 
 # Draw the keypoint matches between both pictures
 # Still based on: https://docs.opencv.org/master/dc/dc3/tutorial_py_matcher.html
@@ -74,6 +88,7 @@ keypoint_matches = cv.drawMatchesKnn(
     img1, kp1, img2, kp2, matches, None, **draw_params)
 # cv.imshow("Keypoint matches", keypoint_matches)
 cv.imwrite("keypoint_matches.png", keypoint_matches)
+logging.info('saved keypoint matches')
 
 # ------------------------------------------------------------
 # STEREO RECTIFICATION
@@ -83,7 +98,9 @@ cv.imwrite("keypoint_matches.png", keypoint_matches)
 pts1 = np.int32(pts1)
 pts2 = np.int32(pts2)
 fundamental_matrix, inliers = cv.findFundamentalMat(
-    pts1, pts2, cv.FM_8POINT)
+    pts1, pts2, cv.FM_LMEDS) # * Different algo to use: FM_7POINT / FM_8POINT / FM_LMEDS / FM_RANSAC
+
+print(fundamental_matrix)
 
 # We select only inlier points
 pts1 = pts1[inliers.ravel() == 1]
@@ -130,6 +147,7 @@ plt.subplot(122), plt.imshow(img3)
 plt.suptitle("Epilines in both images")
 plt.savefig("epilines.png")
 # plt.show()
+logging.info('saved epilines')
 
 # Stereo rectification (uncalibrated variant)
 # Adapted from: https://stackoverflow.com/a/62607343
@@ -161,12 +179,20 @@ axes[1].axvline(400)
 plt.suptitle("Rectified images")
 plt.savefig("rectified_images.png")
 # plt.show()
+logging.info('saved rectified images')
 
 # translate right image to 25 pixels right
 M = np.float32([[1, 0, 25], [0, 1, 0]])
 rows, cols = img2_rectified.shape
 img2_shifted = cv.warpAffine(img2_rectified, M, (cols, rows))
-cv.imwrite('img2_shifted.png', img2_shifted)
+# cv.imwrite('img2_shifted.png', img2_shifted)
+
+# try stereo bm
+# stereo = cv.StereoBM_create(numDisparities=16, blockSize=15)
+# disparity_BM = stereo.compute(img1_rectified, img2_rectified)
+# plt.imshow(disparity_BM, "plasma")
+# plt.colorbar()
+# plt.savefig('stereo_bm.png')
 
 # ------------------------------------------------------------
 # CALCULATE DISPARITY (DEPTH MAP)
@@ -177,24 +203,24 @@ cv.imwrite('img2_shifted.png', img2_shifted)
 # https://docs.opencv.org/4.5.0/d2/d85/classcv_1_1StereoSGBM.html
 
 # Matched block size. It must be an odd number >=1 . Normally, it should be somewhere in the 3..11 range.
-block_size = 5
-min_disp = -112
-max_disp = 0
+block_size = 5 # * 3 - 11
+min_disp = 0 # * divisible by 16
+max_disp = 224
 # Maximum disparity minus minimum disparity. The value is always greater than zero.
 # In the current implementation, this parameter must be divisible by 16.
 num_disp = max_disp - min_disp
 # Margin in percentage by which the best (minimum) computed cost function value should "win" the second best value to consider the found match correct.
 # Normally, a value within the 5-15 range is good enough
-uniquenessRatio = 0
+uniquenessRatio = 5 # * 5 - 15
 # Maximum size of smooth disparity regions to consider their noise speckles and invalidate.
 # Set it to 0 to disable speckle filtering. Otherwise, set it somewhere in the 50-200 range.
-speckleWindowSize = 100
+speckleWindowSize = 200 # * 50 - 200
 # Maximum disparity variation within each connected component.
 # If you do speckle filtering, set the parameter to a positive value, it will be implicitly multiplied by 16.
 # Normally, 1 or 2 is good enough.
-speckleRange = 1
+speckleRange = 2 # * 1 - 2
 disp12MaxDiff = 0
-mode = cv.STEREO_SGBM_MODE_SGBM
+mode = cv.STEREO_SGBM_MODE_HH
 stereo = cv.StereoSGBM_create(
     minDisparity=min_disp,
     numDisparities=num_disp,
@@ -213,6 +239,7 @@ plt.imshow(disparity_SGBM, cmap='plasma')
 plt.colorbar()
 plt.savefig('disparity.png', dpi=500)
 # plt.show()
+logging.info('saved disparity map')
 
 # Normalize the values to a range from 0..255 for a grayscale image
 disparity_SGBM = cv.normalize(disparity_SGBM, disparity_SGBM, alpha=255,
