@@ -1,0 +1,10 @@
+{% comment %} single image depth {% endcomment %}
+https://github.com/JunjH/Revisiting_Single_Depth_Estimation
+https://github.com/nianticlabs/monodepth2
+https://github.com/niranjan-v/Depth-Estimation-from-Single-Image
+
+{% comment %} video depth {% endcomment %}
+https://github.com/facebookresearch/consistent_depth
+
+{% comment %} 360 image depth {% endcomment %}
+https://github.com/albert100121/360SD-Net
