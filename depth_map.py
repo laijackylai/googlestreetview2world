@@ -16,7 +16,7 @@ width = 0
 height = 0
 data = []
 
-with open('test.txt') as data:
+with open('depth.txt') as data:
     for index, line in enumerate(data):
         if index == 0:
             width = int(line.strip())
@@ -26,12 +26,8 @@ with open('test.txt') as data:
             data = line.strip()
 
 data = np.reshape(np.fromstring(data, dtype=np.float32, sep=','), (height, width))
-# data = cv.normalize(data, data, alpha=255, beta=0, norm_type=cv.NORM_MINMAX)
-# data = np.uint8(data)
-
-# data = np.where(data > 5000, -1, data)
-# print('data: ', data)
+data = 1/(1 + np.exp(-data))
 
 plt.imshow(data, cmap='plasma')
 plt.colorbar()
-plt.savefig('./test.png')
+plt.savefig('./depth.png')

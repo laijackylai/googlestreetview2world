@@ -8,3 +8,6 @@ https://github.com/facebookresearch/consistent_depth
 
 {% comment %} 360 image depth {% endcomment %}
 https://github.com/albert100121/360SD-Net
+
+{% comment %} stereo depth {% endcomment %}
+https://github.com/JiaRenChang/PSMNet
