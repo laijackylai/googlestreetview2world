@@ -1,3 +1,4 @@
 # **googlestreetview2world**
-Stopped development
-Might be revisited
+
+Stopped development.
+Might be revisited.
